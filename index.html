@@ -312,10 +312,14 @@
         </div>
     </div>
     <div class="container">
-
-        <div class="upload-area" onclick="document.getElementById('fileUpload').click();">
-            Click to Upload JSON File
-            <input accept=".json" class="input-file" id="fileUpload" onchange="loadFile(event)" type="file" />
+        <!-- File upload block -->
+        <div class="upload-area" onclick="document.getElementById('dataUpload').click();">
+            Click to Upload Articles Data (JSON File)
+            <input accept=".json" class="input-file" id="dataUpload" onchange="loadArticlesFile(event)" type="file" />
+        </div>
+        <div class="upload-area" onclick="document.getElementById('configUpload').click();">
+            Click to Upload View Configuration (JSON File)
+            <input accept=".json" class="input-file" id="configUpload" onchange="loadConfigFile(event)" type="file" />
         </div>
         <div id="criteriaArea"></div>
         <div class="sidebar">
@@ -367,13 +371,11 @@
             const trimExtras = (str) => str.replace(/^[:("]+|[:")]+$/g, '');
             let andSections = query.split(/ AND (?![^()]*\))/);
             let parsedQuery = {};
-            console.log(andSections)
+
             andSections.forEach(section => {
                 if (section.includes(' OR ')) {
                     let orParts = section.split(/ OR (?![^()]*\))/).map(trimExtras);
-                    console.log(orParts)
                     orParts.forEach(part => {
-                      console.log(part)
                         let [field, values] = part.split(':');
                         values = values.substring(1, values.length - 1).split('", "').map(trimExtras);
 
@@ -396,6 +398,7 @@
             const criteriaArea = document.getElementById('criteriaArea');
             criteriaArea.innerHTML =
                 `<strong>Run ID:</strong> ${criteria.run_id}<br>` +
+                `<strong>Language:</strong> ${criteria.language}<br>` +
                 `<strong>Time Frame:</strong> ${formatDate(criteria.begin_date)} to ${formatDate(criteria.end_date)}<br>` +
                 `<strong>Total Articles:</strong> ${criteria.total_articles}<br>`;
 
@@ -448,7 +451,6 @@
         }
 
         function addMetric() {
-
             const newMetricInput = document.getElementById('newMetric');
             const newMetricTermsInput = document.getElementById('newMetricTerms');
             const newMetric = newMetricInput.value;
@@ -458,11 +460,13 @@
                 return;
             }
 
-            let terms = get_metric_terms();
+            let config = get_config();
+            let terms = get_metric_terms(config);
             terms[newMetric] = newMetricTerms;
+            config[window.criteria.language] = terms;
 
-            // save the terms to local storage
-            localStorage.setItem('terms', JSON.stringify(terms));
+            // save the config to local storage
+            localStorage.setItem('config', JSON.stringify(config));
 
             filterArticlesByDate(); // Filter articles to update the metrics
 
@@ -474,11 +478,13 @@
             // remove the -HD, -BD, -RC suffixes
             metric = metric_key_to_metric_name(metric);
 
-            let terms = get_metric_terms();
+            let config = get_config();
+            let terms = get_metric_terms(config);
             delete terms[metric];
+            config[window.criteria.language] = terms;
 
-            // save the terms to local storage
-            localStorage.setItem('terms', JSON.stringify(terms));
+            // save the config to local storage
+            localStorage.setItem('config', JSON.stringify(config));
 
             // delete the metric from the aggregated metrics
             let aggregatedMetrics = window.aggregatedMetrics;
@@ -656,7 +662,19 @@
             });
         }
 
-        function loadFile(event) {
+        function loadConfigFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const configStr = e.target.result;
+                    localStorage.setItem('config', configStr);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function loadArticlesFile(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -698,30 +716,32 @@
             return aggregatedMetrics;
         }
 
-        function get_default_terms() {
-            const terms = {
-                "Islam": ["Islamophobia", "Islamophobic", "Islamophobe", "anti-Muslim"],
-                "Semite": ["antisemitism", "antisemitic", "anti-semitism", "anti-semitic", "antisemite", "anti-semite"],
-                "Israel": ["Israel", "Israeli", "Israelis"],
-                "Palestine": ["Palestine", "Palestinian", "Palestinians"],
-                "WestBank": ["West Bank"],
-                "Gaza": ["Gaza", "Gazans", "Gazan"],
-                "OT": ["Occupied Territories", "Occupied West Bank"],
-                "Al-Shati": ["Al-Shati", "Al Shati", "El Shati", "El-Shati"],
-                "Bureij": ["Bureij", "Boureij"],
-                "Deir-al-Balah": ["Deir-al-Balah", "Deir al-Balah", "Deir al Balah", "Dair al-Balah"],
-                "Jabalia": ["Jabalia", "Jabaliya", "Jabalya"],
-                "Khan-Yunis": ["Khan Yunis", "Khan Yunes", "Khan Younes", "Khan Younis", "Khan Yunus"],
-                "Maghazi": ["Maghazi", "Magasi"],
-                "Nuseirat": ["Nuseirat", "Nusseirat", "Nouseirat"],
-                "Rafah": ["Rafah"],
-                "Genocide": ["Genocide"],
-                "Famine": ["famine", "starve", "starving", "starvation"],
-                "Ethnic-Cleansing": ["ethnic cleansing"],
-                "IsraelOnly": ["Israel"],
-                "PalestineOnly": ["Palestine"],
+        function get_default_config() {
+            const config = {
+                "en": {
+                    "Islam": ["Islamophobia", "Islamophobic", "Islamophobe", "anti-Muslim"],
+                    "Semite": ["antisemitism", "antisemitic", "anti-semitism", "anti-semitic", "antisemite", "anti-semite"],
+                    "Israel": ["Israel", "Israeli", "Israelis"],
+                    "Palestine": ["Palestine", "Palestinian", "Palestinians"],
+                    "WestBank": ["West Bank"],
+                    "Gaza": ["Gaza", "Gazans", "Gazan"],
+                    "OT": ["Occupied Territories", "Occupied West Bank"],
+                    "Al-Shati": ["Al-Shati", "Al Shati", "El Shati", "El-Shati"],
+                    "Bureij": ["Bureij", "Boureij"],
+                    "Deir-al-Balah": ["Deir-al-Balah", "Deir al-Balah", "Deir al Balah", "Dair al-Balah"],
+                    "Jabalia": ["Jabalia", "Jabaliya", "Jabalya"],
+                    "Khan-Yunis": ["Khan Yunis", "Khan Yunes", "Khan Younes", "Khan Younis", "Khan Yunus"],
+                    "Maghazi": ["Maghazi", "Magasi"],
+                    "Nuseirat": ["Nuseirat", "Nusseirat", "Nouseirat"],
+                    "Rafah": ["Rafah"],
+                    "Genocide": ["Genocide"],
+                    "Famine": ["famine", "starve", "starving", "starvation"],
+                    "Ethnic-Cleansing": ["ethnic cleansing"],
+                    "IsraelOnly": ["Israel"],
+                    "PalestineOnly": ["Palestine"]
+                }
             };
-            return terms;
+            return config;
         }
 
         function metric_key_to_metric_name(metricKey) {
@@ -732,25 +752,26 @@
             // remove the -HD, -BD, -RC suffixes
             metric = metric_key_to_metric_name(metric);
 
-            const defaultMetrics = Object.keys(get_default_terms());
+            const defaultMetrics = Object.keys(get_default_config()[window.criteria.language] || {});
             return defaultMetrics.includes(metric);
         }
 
-        function get_metric_terms() {
-            // check if the terms are defined in local storage
-            if (localStorage.getItem('terms')) {
-                const terms = JSON.parse(localStorage.getItem('terms'));
-                // check if terms has "Gaza"
-                if (terms["Gaza"] !== undefined) {
-                    return terms;
-                }
+        function get_config() {
+            // Check if the config is defined in local storage
+            if (localStorage.getItem("config")) {
+                return JSON.parse(localStorage.config)
             }
+            // if not, use the default config
+            return get_default_config();
+        }
 
-            // if not, use the default terms
-            const terms = get_default_terms();
-            // save the terms to local storage
-            localStorage.setItem('terms', JSON.stringify(terms));
-            return terms;
+        function get_metric_terms(config = get_config()) {
+            const language = window.criteria.language;
+            if (language in config) {
+                return config[language];
+            }
+            console.log(`No configuration found. Make sure to upload a configuration for language: ${language}.`);
+            return {};
         }
 
         /**
@@ -1022,5 +1043,4 @@
         }
     </script>
 </body>
-
 </html>

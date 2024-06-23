@@ -727,7 +727,7 @@
   }
 
   function get_default_config() {
-    const config = {
+    return {
       "en": {
         "Islam": ["Islamophobia", "Islamophobic", "Islamophobe", "anti-Muslim"],
         "Semite": ["antisemitism", "antisemitic", "anti-semitism", "anti-semitic", "antisemite", "anti-semite"],
@@ -749,9 +749,30 @@
         "Ethnic-Cleansing": ["ethnic cleansing"],
         "IsraelOnly": ["Israel"],
         "PalestineOnly": ["Palestine"]
+      },
+      "de": {
+        "Islam": ["Islamophobie", "islamfeindlich", "islamophob", "anti-muslimisch"],
+        "Semite": ["Antisemitismus", "antisemitisch", "Antisemit"],
+        "Israel": ["Israel", "Israeli", "Israelis"],
+        "Palestine": ["Palästina", "Palästinenser", "Palästinensisch", "Palestine"],
+        "WestBank": ["Westbank", "Westjordanland", "West Bank"],
+        "Gaza": ["Gaza", "Gazaner", "Gazan"],
+        "OT": ["Besetztes Gebiet", "Besetzte Gebiete", "Besetztes Westjordanland"],
+        "Al-Shati": ["Al-Shati", "Al Shati", "El Shati", "El-Shati"],
+        "Bureij": ["Bureij", "Boureij"],
+        "Deir-al-Balah": ["Deir-al-Balah", "Deir al-Balah", "Deir al Balah", "Dair al-Balah"],
+        "Jabalia": ["Jabalia", "Jabaliya", "Jabalya", "Dschabaliya", "Dschabalija", "Dschabalia"],
+        "Khan-Yunis": ["Khan Yunis", "Khan Yunes", "Khan Younes", "Khan Younis", "Khan Yunus", "Chan Yunis", "Chan Junis"],
+        "Maghazi": ["Maghazi", "Magasi"],
+        "Nuseirat": ["Nuseirat", "Nusseirat", "Nouseirat"],
+        "Rafah": ["Rafah"],
+        "Genocide": ["Völkermord"],
+        "Famine": ["Hungersnot", "verhungern", "verhungert"],
+        "Ethnic-Cleansing": ["ethnische Säuberung", "ethnisch gesäubert"],
+        "IsraelOnly": ["Israel"],
+        "PalestineOnly": ["Palästina"]
       }
     };
-    return config;
   }
 
   function metric_key_to_metric_name(metricKey) {
